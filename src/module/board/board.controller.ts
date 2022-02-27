@@ -40,9 +40,12 @@ export class BoardController {
   }
 
   // 게시글 삭제
-  @Delete(':idx')
-  async deletePost(@Param('idx', ParseIntPipe) postIdx: number) {
-    return await this.boardService.deletePost(postIdx);
+  @Delete('')
+  async deletePost(
+    @Query('post', ParseIntPipe) postIdx: number,
+    @Query('pw') pw: string,
+  ) {
+    return await this.boardService.deletePost(postIdx, pw);
   }
 
   // 댓글 목록

@@ -101,9 +101,10 @@ export class BoardService {
     return new ResponseDto(200, null, 'success');
   }
 
-  async deletePost(postIdx: number) {
+  async deletePost(postIdx: number, pw: string) {
     const post = await this.postRepository.findOne(postIdx);
     if (!post) throw new NotFoundException();
+    if (!(await bcrypt.compare(pw, post.pw))) throw new UnauthorizedException();
     await this.postRepository.delete({ idx: postIdx });
     return new ResponseDto(200, null, 'success');
   }
