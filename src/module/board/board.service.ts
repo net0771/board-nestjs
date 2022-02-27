@@ -105,7 +105,26 @@ export class BoardService {
     const post = await this.postRepository.findOne(postIdx);
     if (!post) throw new NotFoundException();
     if (!(await bcrypt.compare(pw, post.pw))) throw new UnauthorizedException();
-    await this.postRepository.delete({ idx: postIdx });
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    const replyRepository =
+      queryRunner.manager.getCustomRepository(ReplyRepository);
+    const postRepository =
+      queryRunner.manager.getCustomRepository(PostRepository);
+
+    try {
+      await postRepository.delete({ idx: postIdx });
+      await replyRepository.delete({ postIdx: postIdx });
+      await queryRunner.commitTransaction();
+      return new ResponseDto(200, null, 'success');
+    } catch (err) {
+      console.error(err);
+      await queryRunner.rollbackTransaction();
+      throw new Error();
+    } finally {
+      await queryRunner.release();
+    }
     return new ResponseDto(200, null, 'success');
   }
 
